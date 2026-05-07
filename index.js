@@ -22,7 +22,9 @@ earthGroup.rotation.z = -23.4 * Math.PI / 180;
 scene.add(earthGroup);
 
 // --- Camera orbit ---
-const ORBIT_RADIUS = 5;
+let orbitRadius = 5;
+const ORBIT_RADIUS_MIN = 1.5;
+const ORBIT_RADIUS_MAX = 20;
 const ORBIT_SPEED = 0.0012; // radians per frame
 
 // Match the earth's axial tilt so the orbit lies in the equatorial plane.
@@ -45,9 +47,9 @@ function updateCamera() {
   const sinEl = Math.sin(orbitElevation);
   // p = R·cosEl·(cosAngle·v + sinAngle·u) + R·sinEl·rotationAxis
   camera.position.set(
-    ORBIT_RADIUS * (cosEl * Math.cos(orbitAngle) * cosTilt + sinEl * sinTilt),
-    ORBIT_RADIUS * (-cosEl * Math.cos(orbitAngle) * sinTilt + sinEl * cosTilt),
-    ORBIT_RADIUS * cosEl * Math.sin(orbitAngle),
+    orbitRadius * (cosEl * Math.cos(orbitAngle) * cosTilt + sinEl * sinTilt),
+    orbitRadius * (-cosEl * Math.cos(orbitAngle) * sinTilt + sinEl * cosTilt),
+    orbitRadius * cosEl * Math.sin(orbitAngle),
   );
   camera.lookAt(0, 0, 0);
 }
@@ -77,23 +79,57 @@ window.addEventListener('mouseup', () => {
   renderer.domElement.style.cursor = 'grab';
 });
 
+let prevPinchDist = null;
+
 renderer.domElement.addEventListener('touchstart', (e) => {
-  isDragging = true;
-  prevMouseX = e.touches[0].clientX;
-  prevMouseY = e.touches[0].clientY;
+  if (e.touches.length === 2) {
+    isDragging = false;
+    prevPinchDist = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY,
+    );
+  } else {
+    isDragging = true;
+    prevMouseX = e.touches[0].clientX;
+    prevMouseY = e.touches[0].clientY;
+  }
 }, { passive: true });
 
 window.addEventListener('touchmove', (e) => {
-  if (!isDragging) return;
-  const dx = e.touches[0].clientX - prevMouseX;
-  const dy = e.touches[0].clientY - prevMouseY;
-  orbitAngle    -= dx * 0.005;
-  orbitElevation = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, orbitElevation + dy * 0.005));
-  prevMouseX = e.touches[0].clientX;
-  prevMouseY = e.touches[0].clientY;
+  if (e.touches.length === 2) {
+    const dist = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY,
+    );
+    if (prevPinchDist !== null) {
+      orbitRadius = Math.max(ORBIT_RADIUS_MIN, Math.min(ORBIT_RADIUS_MAX,
+        orbitRadius * (prevPinchDist / dist),
+      ));
+    }
+    prevPinchDist = dist;
+  } else {
+    prevPinchDist = null;
+    if (!isDragging) return;
+    const dx = e.touches[0].clientX - prevMouseX;
+    const dy = e.touches[0].clientY - prevMouseY;
+    orbitAngle    -= dx * 0.005;
+    orbitElevation = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, orbitElevation + dy * 0.005));
+    prevMouseX = e.touches[0].clientX;
+    prevMouseY = e.touches[0].clientY;
+  }
 }, { passive: true });
 
-window.addEventListener('touchend', () => { isDragging = false; });
+window.addEventListener('touchend', () => {
+  isDragging = false;
+  prevPinchDist = null;
+});
+
+renderer.domElement.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  orbitRadius = Math.max(ORBIT_RADIUS_MIN, Math.min(ORBIT_RADIUS_MAX,
+    orbitRadius * (1 + e.deltaY * 0.001),
+  ));
+}, { passive: false });
 
 const detail = 12;
 const loader = new THREE.TextureLoader();
