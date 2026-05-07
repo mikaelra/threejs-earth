@@ -23,7 +23,7 @@ scene.add(earthGroup);
 
 // --- Camera orbit ---
 const ORBIT_RADIUS = 5;
-const ORBIT_SPEED = 0.0004; // radians per frame
+const ORBIT_SPEED = 0.0012; // radians per frame
 
 let orbitAngle = 0;
 let orbitElevation = 0;    // vertical offset from equatorial path
