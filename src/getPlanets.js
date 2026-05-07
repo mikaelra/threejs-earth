@@ -49,9 +49,9 @@ function sunTexture(size = 256) {
   const c = size / 2;
   const grad = ctx.createRadialGradient(c, c, 0, c, c, c);
   grad.addColorStop(0.0,  '#ffffff');
-  grad.addColorStop(0.12, '#fff7a0');
-  grad.addColorStop(0.35, '#ffe040');
-  grad.addColorStop(0.6,  '#ffaa00');
+  grad.addColorStop(0.2,  '#fffde0');
+  grad.addColorStop(0.45, '#fff176');
+  grad.addColorStop(0.7,  '#ffd740');
   grad.addColorStop(1.0,  'rgba(0,0,0,0)');
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, size, size);
@@ -141,7 +141,7 @@ export default function getPlanets() {
   group.add(mercurySprite);
 
   // Venus — bright, hint of pale green
-  const venusSprite = makeSprite(glowTexture('#ccffcc'), 0.65);
+  const venusSprite = makeSprite(glowTexture('#aaffaa'), 0.65);
   venusSprite.position.copy(getPos('Venus'));
   group.add(venusSprite);
 
@@ -151,7 +151,7 @@ export default function getPlanets() {
   group.add(marsSprite);
 
   // Jupiter — brightest planet, bluish
-  const jupiterSprite = makeSprite(glowTexture('#aaccff'), 0.75);
+  const jupiterSprite = makeSprite(glowTexture('#88bbff'), 0.75);
   jupiterSprite.position.copy(getPos('Jupiter'));
   group.add(jupiterSprite);
 

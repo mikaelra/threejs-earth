@@ -374,7 +374,7 @@ const planets = getPlanets();
 scene.add(planets);
 const sunSprite = planets.children[0];
 
-const sunLight = new THREE.DirectionalLight(0xffffff, 2.0);
+const sunLight = new THREE.DirectionalLight(0xffffff, 3.5);
 sunLight.position.set(-2, 0.5, 1.5);
 scene.add(sunLight);
 
