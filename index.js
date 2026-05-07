@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { OrbitControls } from 'jsm/controls/OrbitControls.js';
+import * as Astronomy from 'astronomy-engine';
 
 import getStarfield from "./src/getStarfield.js";
 import { getFresnelMat } from "./src/getFresnelMat.js";
@@ -62,6 +63,16 @@ const fresnelMat = getFresnelMat();
 const glowMesh = new THREE.Mesh(geometry, fresnelMat);
 glowMesh.scale.setScalar(1.01);
 earthGroup.add(glowMesh);
+
+// Rotate the globe to match the current time.
+// GMST gives the Earth's rotation angle relative to the stars; the π offset
+// accounts for how this texture maps longitude 0 (Greenwich) to the +X axis.
+const gmst = Astronomy.SiderealTime(new Date()); // hours, 0–24
+const earthRotation = Math.PI + gmst * (Math.PI / 12);
+earthMesh.rotation.y  = earthRotation;
+lightsMesh.rotation.y = earthRotation;
+cloudsMesh.rotation.y = earthRotation;
+glowMesh.rotation.y   = earthRotation;
 
 // Star catalog — top 300 stars by visual magnitude
 // ra: [hours, minutes]   dec: decimal degrees   mag: visual magnitude
