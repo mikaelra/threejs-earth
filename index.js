@@ -370,22 +370,15 @@ const starCatalog = [
 const stars = getStarfield({ stars: starCatalog });
 scene.add(stars);
 
-const planets = getPlanets();
+const { group: planets, sunPosition } = getPlanets();
 scene.add(planets);
 
 const sunLight = new THREE.DirectionalLight(0xffffff, 2.0);
-sunLight.position.set(-2, 0.5, 1.5);
+sunLight.position.copy(sunPosition);
 scene.add(sunLight);
 
 function animate() {
   requestAnimationFrame(animate);
-
-  earthMesh.rotation.y += 0.002;
-  lightsMesh.rotation.y += 0.002;
-  cloudsMesh.rotation.y += 0.0023;
-  glowMesh.rotation.y += 0.002;
-  stars.rotation.y -= 0.0002;
-  planets.rotation.y -= 0.0002;
   renderer.render(scene, camera);
 }
 

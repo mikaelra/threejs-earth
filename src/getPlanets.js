@@ -124,8 +124,9 @@ export default function getPlanets() {
   };
 
   // Sun — large yellow disc
+  const sunPosition = getPos('Sun');
   const sunSprite = makeSprite(sunTexture(), 5.0);
-  sunSprite.position.copy(getPos('Sun'));
+  sunSprite.position.copy(sunPosition);
   group.add(sunSprite);
 
   // Moon — phase-correct disc
@@ -161,5 +162,5 @@ export default function getPlanets() {
   saturnSprite.position.copy(getPos('Saturn'));
   group.add(saturnSprite);
 
-  return group;
+  return { group, sunPosition };
 }
