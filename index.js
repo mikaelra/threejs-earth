@@ -25,6 +25,15 @@ scene.add(earthGroup);
 const ORBIT_RADIUS = 5;
 const ORBIT_SPEED = 0.0012; // radians per frame
 
+// Match the earth's axial tilt so the orbit lies in the equatorial plane.
+// earthGroup.rotation.z = -23.4°  →  rotation axis = (sin T, cos T, 0)
+// Two orthogonal basis vectors spanning the equatorial plane:
+//   u = (0, 0, 1)                        (Z is already in the plane)
+//   v = axis × u = (cos T, -sin T, 0)
+const TILT = 23.4 * Math.PI / 180;
+const cosTilt = Math.cos(TILT);
+const sinTilt = Math.sin(TILT);
+
 let orbitAngle = 0;
 let orbitElevation = 0;    // vertical offset from equatorial path
 let isDragging = false;
@@ -33,10 +42,12 @@ let prevMouseY = 0;
 
 function updateCamera() {
   const cosEl = Math.cos(orbitElevation);
+  const sinEl = Math.sin(orbitElevation);
+  // p = R·cosEl·(cosAngle·v + sinAngle·u) + R·sinEl·rotationAxis
   camera.position.set(
-    ORBIT_RADIUS * Math.cos(orbitAngle) * cosEl,
-    ORBIT_RADIUS * Math.sin(orbitElevation),
-    ORBIT_RADIUS * Math.sin(orbitAngle) * cosEl,
+    ORBIT_RADIUS * (cosEl * Math.cos(orbitAngle) * cosTilt + sinEl * sinTilt),
+    ORBIT_RADIUS * (-cosEl * Math.cos(orbitAngle) * sinTilt + sinEl * cosTilt),
+    ORBIT_RADIUS * cosEl * Math.sin(orbitAngle),
   );
   camera.lookAt(0, 0, 0);
 }
