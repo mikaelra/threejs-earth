@@ -123,10 +123,9 @@ export default function getPlanets() {
     return raDecToVector3(eq.ra, eq.dec);
   };
 
-  // Sun — large yellow disc
-  const sunPosition = getPos('Sun');
+  // Sun — large yellow disc (children[0], used by index.js to track light direction)
   const sunSprite = makeSprite(sunTexture(), 5.0);
-  sunSprite.position.copy(sunPosition);
+  sunSprite.position.copy(getPos('Sun'));
   group.add(sunSprite);
 
   // Moon — phase-correct disc
@@ -162,5 +161,5 @@ export default function getPlanets() {
   saturnSprite.position.copy(getPos('Saturn'));
   group.add(saturnSprite);
 
-  return { group, sunPosition };
+  return group;
 }
