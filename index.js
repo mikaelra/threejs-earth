@@ -4,6 +4,7 @@ import { OrbitControls } from 'jsm/controls/OrbitControls.js';
 import getStarfield from "./src/getStarfield.js";
 import { getFresnelMat } from "./src/getFresnelMat.js";
 import getPlanets from "./src/getPlanets.js";
+import { createMarker } from "./src/getMarker.js";
 
 const w = window.innerWidth;
 const h = window.innerHeight;
@@ -33,6 +34,10 @@ const material = new THREE.MeshPhongMaterial({
 // material.map.colorSpace = THREE.SRGBColorSpace;
 const earthMesh = new THREE.Mesh(geometry, material);
 earthGroup.add(earthMesh);
+
+// Reference marker — rotates with the earth surface
+const athensMarker = createMarker(37.9838, -25, 'Athens');
+earthMesh.add(athensMarker);
 
 const lightsMat = new THREE.MeshBasicMaterial({
   map: loader.load("./textures/03_earthlights1k.jpg"),
