@@ -36,7 +36,7 @@ const earthMesh = new THREE.Mesh(geometry, material);
 earthGroup.add(earthMesh);
 
 // Reference marker — rotates with the earth surface
-const athensMarker = createMarker(37.9838, -25, 'Athens');
+const athensMarker = createMarker(37.9838, 25, 'Athens');
 earthMesh.add(athensMarker);
 
 const lightsMat = new THREE.MeshBasicMaterial({
