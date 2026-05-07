@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { OrbitControls } from 'jsm/controls/OrbitControls.js';
 import * as Astronomy from 'astronomy-engine';
 
 import getStarfield from "./src/getStarfield.js";
@@ -11,7 +10,6 @@ const w = window.innerWidth;
 const h = window.innerHeight;
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, w / h, 0.1, 1000);
-camera.position.z = 5;
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(w, h);
 document.body.appendChild(renderer.domElement);
@@ -22,7 +20,117 @@ renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
 const earthGroup = new THREE.Group();
 earthGroup.rotation.z = -23.4 * Math.PI / 180;
 scene.add(earthGroup);
-new OrbitControls(camera, renderer.domElement);
+
+// --- Camera orbit ---
+let orbitRadius = 5;
+const ORBIT_RADIUS_MIN = 1.5;
+const ORBIT_RADIUS_MAX = 20;
+const ORBIT_SPEED = 0.0012; // radians per frame
+
+// Match the earth's axial tilt so the orbit lies in the equatorial plane.
+// earthGroup.rotation.z = -23.4°  →  rotation axis = (sin T, cos T, 0)
+// Two orthogonal basis vectors spanning the equatorial plane:
+//   u = (0, 0, 1)                        (Z is already in the plane)
+//   v = axis × u = (cos T, -sin T, 0)
+const TILT = 23.4 * Math.PI / 180;
+const cosTilt = Math.cos(TILT);
+const sinTilt = Math.sin(TILT);
+
+let orbitAngle = 0;
+let orbitElevation = Math.PI / 4; // 45° — midway between equator and north pole
+let isDragging = false;
+let prevMouseX = 0;
+let prevMouseY = 0;
+
+function updateCamera() {
+  const cosEl = Math.cos(orbitElevation);
+  const sinEl = Math.sin(orbitElevation);
+  // p = R·cosEl·(cosAngle·v + sinAngle·u) + R·sinEl·rotationAxis
+  camera.position.set(
+    orbitRadius * (cosEl * Math.cos(orbitAngle) * cosTilt + sinEl * sinTilt),
+    orbitRadius * (-cosEl * Math.cos(orbitAngle) * sinTilt + sinEl * cosTilt),
+    orbitRadius * cosEl * Math.sin(orbitAngle),
+  );
+  camera.lookAt(0, 0, 0);
+}
+
+updateCamera();
+renderer.domElement.style.cursor = 'grab';
+
+renderer.domElement.addEventListener('mousedown', (e) => {
+  isDragging = true;
+  prevMouseX = e.clientX;
+  prevMouseY = e.clientY;
+  renderer.domElement.style.cursor = 'grabbing';
+});
+
+window.addEventListener('mousemove', (e) => {
+  if (!isDragging) return;
+  const dx = e.clientX - prevMouseX;
+  const dy = e.clientY - prevMouseY;
+  orbitAngle    -= dx * 0.005;
+  orbitElevation = Math.max(0, Math.min(Math.PI / 2, orbitElevation + dy * 0.005));
+  prevMouseX = e.clientX;
+  prevMouseY = e.clientY;
+});
+
+window.addEventListener('mouseup', () => {
+  isDragging = false;
+  renderer.domElement.style.cursor = 'grab';
+});
+
+let prevPinchDist = null;
+
+renderer.domElement.addEventListener('touchstart', (e) => {
+  if (e.touches.length === 2) {
+    isDragging = false;
+    prevPinchDist = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY,
+    );
+  } else {
+    isDragging = true;
+    prevMouseX = e.touches[0].clientX;
+    prevMouseY = e.touches[0].clientY;
+  }
+}, { passive: true });
+
+window.addEventListener('touchmove', (e) => {
+  if (e.touches.length === 2) {
+    const dist = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY,
+    );
+    if (prevPinchDist !== null) {
+      orbitRadius = Math.max(ORBIT_RADIUS_MIN, Math.min(ORBIT_RADIUS_MAX,
+        orbitRadius * (prevPinchDist / dist),
+      ));
+    }
+    prevPinchDist = dist;
+  } else {
+    prevPinchDist = null;
+    if (!isDragging) return;
+    const dx = e.touches[0].clientX - prevMouseX;
+    const dy = e.touches[0].clientY - prevMouseY;
+    orbitAngle    -= dx * 0.005;
+    orbitElevation = Math.max(0, Math.min(Math.PI / 2, orbitElevation + dy * 0.005));
+    prevMouseX = e.touches[0].clientX;
+    prevMouseY = e.touches[0].clientY;
+  }
+}, { passive: true });
+
+window.addEventListener('touchend', () => {
+  isDragging = false;
+  prevPinchDist = null;
+});
+
+renderer.domElement.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  orbitRadius = Math.max(ORBIT_RADIUS_MIN, Math.min(ORBIT_RADIUS_MAX,
+    orbitRadius * (1 + e.deltaY * 0.001),
+  ));
+}, { passive: false });
+
 const detail = 12;
 const loader = new THREE.TextureLoader();
 const geometry = new THREE.IcosahedronGeometry(1, detail);
@@ -393,6 +501,13 @@ const _sunWorldPos = new THREE.Vector3();
 
 function animate() {
   requestAnimationFrame(animate);
+
+  if (!isDragging) {
+    orbitAngle += ORBIT_SPEED;
+    // smooth snap elevation back to orbit path (45° latitude)
+    orbitElevation += (Math.PI / 4 - orbitElevation) * 0.04;
+  }
+  updateCamera();
 
   stars.rotation.y -= 0.0002;
   planets.rotation.y -= 0.0002;
