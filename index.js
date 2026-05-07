@@ -1,5 +1,4 @@
 import * as THREE from "three";
-import { OrbitControls } from 'jsm/controls/OrbitControls.js';
 import * as Astronomy from 'astronomy-engine';
 
 import getStarfield from "./src/getStarfield.js";
@@ -11,7 +10,6 @@ const w = window.innerWidth;
 const h = window.innerHeight;
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, w / h, 0.1, 1000);
-camera.position.z = 5;
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(w, h);
 document.body.appendChild(renderer.domElement);
@@ -22,7 +20,70 @@ renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
 const earthGroup = new THREE.Group();
 earthGroup.rotation.z = -23.4 * Math.PI / 180;
 scene.add(earthGroup);
-new OrbitControls(camera, renderer.domElement);
+
+// --- Camera orbit ---
+const ORBIT_RADIUS = 5;
+const ORBIT_SPEED = 0.0004; // radians per frame
+
+let orbitAngle = 0;
+let orbitElevation = 0;    // vertical offset from equatorial path
+let isDragging = false;
+let prevMouseX = 0;
+let prevMouseY = 0;
+
+function updateCamera() {
+  const cosEl = Math.cos(orbitElevation);
+  camera.position.set(
+    ORBIT_RADIUS * Math.cos(orbitAngle) * cosEl,
+    ORBIT_RADIUS * Math.sin(orbitElevation),
+    ORBIT_RADIUS * Math.sin(orbitAngle) * cosEl,
+  );
+  camera.lookAt(0, 0, 0);
+}
+
+updateCamera();
+renderer.domElement.style.cursor = 'grab';
+
+renderer.domElement.addEventListener('mousedown', (e) => {
+  isDragging = true;
+  prevMouseX = e.clientX;
+  prevMouseY = e.clientY;
+  renderer.domElement.style.cursor = 'grabbing';
+});
+
+window.addEventListener('mousemove', (e) => {
+  if (!isDragging) return;
+  const dx = e.clientX - prevMouseX;
+  const dy = e.clientY - prevMouseY;
+  orbitAngle    -= dx * 0.005;
+  orbitElevation = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, orbitElevation + dy * 0.005));
+  prevMouseX = e.clientX;
+  prevMouseY = e.clientY;
+});
+
+window.addEventListener('mouseup', () => {
+  isDragging = false;
+  renderer.domElement.style.cursor = 'grab';
+});
+
+renderer.domElement.addEventListener('touchstart', (e) => {
+  isDragging = true;
+  prevMouseX = e.touches[0].clientX;
+  prevMouseY = e.touches[0].clientY;
+}, { passive: true });
+
+window.addEventListener('touchmove', (e) => {
+  if (!isDragging) return;
+  const dx = e.touches[0].clientX - prevMouseX;
+  const dy = e.touches[0].clientY - prevMouseY;
+  orbitAngle    -= dx * 0.005;
+  orbitElevation = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, orbitElevation + dy * 0.005));
+  prevMouseX = e.touches[0].clientX;
+  prevMouseY = e.touches[0].clientY;
+}, { passive: true });
+
+window.addEventListener('touchend', () => { isDragging = false; });
+
 const detail = 12;
 const loader = new THREE.TextureLoader();
 const geometry = new THREE.IcosahedronGeometry(1, detail);
@@ -393,6 +454,13 @@ const _sunWorldPos = new THREE.Vector3();
 
 function animate() {
   requestAnimationFrame(animate);
+
+  if (!isDragging) {
+    orbitAngle += ORBIT_SPEED;
+    // smooth snap elevation back to equatorial path
+    orbitElevation += (0 - orbitElevation) * 0.04;
+  }
+  updateCamera();
 
   stars.rotation.y -= 0.0002;
   planets.rotation.y -= 0.0002;
