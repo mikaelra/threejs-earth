@@ -57,7 +57,18 @@ const glowMesh = new THREE.Mesh(geometry, fresnelMat);
 glowMesh.scale.setScalar(1.01);
 earthGroup.add(glowMesh);
 
-const stars = getStarfield({numStars: 2000});
+// Star catalog — RA: [hours, minutes, seconds], Dec: [degrees, arcminutes, arcseconds]
+const starCatalog = [
+  // Ursa Major
+  { name: "Alioth", ra: [12, 54,  2], dec: [55, 57, 35] },
+  { name: "Dubhe",  ra: [11,  3, 44], dec: [61, 45,  4] },
+  { name: "Merak",  ra: [11,  1, 50], dec: [56, 22, 57] },
+  { name: "Phecda", ra: [11, 53, 50], dec: [53, 41, 41] },
+  { name: "Megrez", ra: [12, 15, 26], dec: [57,  1, 57] },
+  { name: "Mizar",  ra: [13, 23, 56], dec: [54, 55, 31] },
+  { name: "Alkaid", ra: [13, 47, 32], dec: [49, 18, 48] },
+];
+const stars = getStarfield({ stars: starCatalog });
 scene.add(stars);
 
 const sunLight = new THREE.DirectionalLight(0xffffff, 2.0);
