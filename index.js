@@ -3,6 +3,7 @@ import { OrbitControls } from 'jsm/controls/OrbitControls.js';
 
 import getStarfield from "./src/getStarfield.js";
 import { getFresnelMat } from "./src/getFresnelMat.js";
+import getPlanets from "./src/getPlanets.js";
 
 const w = window.innerWidth;
 const h = window.innerHeight;
@@ -251,6 +252,9 @@ const starCatalog = [
 const stars = getStarfield({ stars: starCatalog });
 scene.add(stars);
 
+const planets = getPlanets();
+scene.add(planets);
+
 const sunLight = new THREE.DirectionalLight(0xffffff, 2.0);
 sunLight.position.set(-2, 0.5, 1.5);
 scene.add(sunLight);
@@ -263,6 +267,7 @@ function animate() {
   cloudsMesh.rotation.y += 0.0023;
   glowMesh.rotation.y += 0.002;
   stars.rotation.y -= 0.0002;
+  planets.rotation.y -= 0.0002;
   renderer.render(scene, camera);
 }
 
