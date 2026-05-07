@@ -37,7 +37,7 @@ const cosTilt = Math.cos(TILT);
 const sinTilt = Math.sin(TILT);
 
 let orbitAngle = 0;
-let orbitElevation = 0;    // vertical offset from equatorial path
+let orbitElevation = Math.PI / 4; // 45° — midway between equator and north pole
 let isDragging = false;
 let prevMouseX = 0;
 let prevMouseY = 0;
@@ -69,7 +69,7 @@ window.addEventListener('mousemove', (e) => {
   const dx = e.clientX - prevMouseX;
   const dy = e.clientY - prevMouseY;
   orbitAngle    -= dx * 0.005;
-  orbitElevation = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, orbitElevation + dy * 0.005));
+  orbitElevation = Math.max(0, Math.min(Math.PI / 2, orbitElevation + dy * 0.005));
   prevMouseX = e.clientX;
   prevMouseY = e.clientY;
 });
@@ -113,7 +113,7 @@ window.addEventListener('touchmove', (e) => {
     const dx = e.touches[0].clientX - prevMouseX;
     const dy = e.touches[0].clientY - prevMouseY;
     orbitAngle    -= dx * 0.005;
-    orbitElevation = Math.max(-Math.PI / 3, Math.min(Math.PI / 3, orbitElevation + dy * 0.005));
+    orbitElevation = Math.max(0, Math.min(Math.PI / 2, orbitElevation + dy * 0.005));
     prevMouseX = e.touches[0].clientX;
     prevMouseY = e.touches[0].clientY;
   }
@@ -504,8 +504,8 @@ function animate() {
 
   if (!isDragging) {
     orbitAngle += ORBIT_SPEED;
-    // smooth snap elevation back to equatorial path
-    orbitElevation += (0 - orbitElevation) * 0.04;
+    // smooth snap elevation back to orbit path (45° latitude)
+    orbitElevation += (Math.PI / 4 - orbitElevation) * 0.04;
   }
   updateCamera();
 
